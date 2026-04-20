@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Focus On 3D | Max Clock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-color: #1a1a1a;
+            --text-color: #1cb49c; 
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            display: grid;
+            grid-template-rows: repeat(3, 1fr);
+            justify-items: center;
+            align-items: center;
+            height: 100dvh; 
+            width: 100%;
+            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            width: 92vw;
+            max-width: 500px;
+            height: 92%; /* 讓卡片本身佔滿格子 */
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        /* 翻頁折線 - 稍微調淡避免切斷大數字的視覺感 */
+        .card::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background-color: var(--bg-color);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+            opacity: 0.6;
+        }
+
+        /* 日期與星期：改為懸浮定位，不吃數字空間 */
+        .info-text {
+            font-size: 2.5dvh; 
+            font-weight: 700;
+            position: absolute;
+            top: 5%; /* 靠最頂部 */
+            left: 50%;
+            transform: translateX(-50%);
+            letter-spacing: 1px;
+            z-index: 10;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .time-text {
+            /* 終極放大：21vh */
+            font-size: 21dvh; 
+            font-weight: 900; 
+            line-height: 1;
+            letter-spacing: -2px; /* 縮緊字距讓字顯得更大 */
+            z-index: 1;
+            font-variant-numeric: tabular-nums;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #fs-btn {
+            position: fixed;
+            bottom: calc(20px + env(safe-area-inset-bottom));
+            right: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0.1; /* 更加隱形，不干擾視覺 */
+            z-index: 100;
+        }
+
+        /* 橫向模式下數字會變超級巨大 */
+        @media (orientation: landscape) {
+            .container {
+                grid-template-rows: 1fr;
+                grid-template-columns: repeat(3, 1fr);
+                padding: 0 2vw;
+            }
+            .card {
+                width: 92%;
+                height: 85dvh;
+            }
+            .time-text {
+                font-size: 45dvh;
+            }
+            .info-text {
+                font-size: 4dvh;
+                top: 8%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <div class="info-text" id="date-label">----.--.--</div>
+            <div class="time-text" id="hours">00</div>
+        </div>
+        <div class="card">
+            <div class="info-text" id="day-label">LOADING</div>
+            <div class="time-text" id="minutes">00</div>
+        </div>
+        <div class="card">
+            <div class="time-text" id="seconds">00</div>
+        </div>
+    </div>
+
+    <button id="fs-btn" onclick="toggleFullScreen()">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10.5 1a.5.5 0 0 1 0-1h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4zM1.5 10.5a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm14 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/>
+        </svg>
+    </button>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            // 格式: 2026.04.20
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            document.getElementById('date-label').textContent = `${yyyy}.${mm}.${dd}`;
+
+            const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            document.getElementById('day-label').textContent = days[now.getDay()];
+
+            document.getElementById('hours').textContent = String(now.getHours()).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(now.getSeconds()).padStart(2, '0');
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
