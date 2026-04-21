@@ -3,197 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Focus On 3D | Non-Stop Clock</title>
+    <title>Focus On 3D | Real-Weather Meteor Clock</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #000000;
             --card-color: #1a1a1a;
             --text-color: #1cb49c; 
+            --beam-glow: #00fff2;
+            --screen-radius: 40px; 
+            --track-width: 8px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body, html {
-            height: 100%;
-            width: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Inter', -apple-system, sans-serif;
+            height: 100%; width: 100%;
+            background-color: #000;
             overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .stage {
+            position: relative;
+            width: 100vw; height: 100vh;
+            background: var(--bg-color);
+            overflow: hidden; 
+            border-radius: var(--screen-radius); 
+        }
+
+        .meteor-disk {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 250vmax; height: 250vmax;
+            margin-left: -125vmax; margin-top: -125vmax;
+            background: conic-gradient(from 0deg, transparent 75%, var(--beam-glow) 95%, #fff 100%);
+            animation: rotate 30s linear infinite; 
+            z-index: 1;
+        }
+
+        .inner-mask {
+            position: absolute;
+            inset: var(--track-width);
+            background: var(--bg-color);
+            border-radius: calc(var(--screen-radius) - var(--track-width));
+            z-index: 2;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 10;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
-            cursor: pointer;
+            height: 100%; width: 100%;
+            padding: calc(var(--track-width) + 5px) 0;
+            gap: 8px;
         }
 
-        .container {
-            display: grid;
-            grid-template-rows: repeat(3, 1fr);
-            justify-items: center;
-            align-items: center;
-            height: 100dvh; 
-            width: 100%;
-            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
-        }
-
-        .card {
-            background-color: var(--card-color);
-            width: 92vw;
-            max-width: 500px;
-            height: 90%; 
+        .time-box {
+            position: relative;
+            width: 90vw;
+            max-width: 550px;
+            flex: 1; 
+            background: var(--card-color);
             border-radius: 20px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            position: relative;
             box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-            pointer-events: none;
+            border: 1px solid rgba(28, 180, 156, 0.1);
+            overflow: hidden;
         }
 
-        .card::after {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background-color: var(--bg-color);
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 5;
-            opacity: 0.5;
-        }
-
-        .info-text {
-            font-size: 2.2dvh; 
+        .top-info {
+            font-size: 2dvh;
             font-weight: 700;
             position: absolute;
-            top: 6%; 
-            left: 50%;
-            transform: translateX(-50%);
+            top: 6%;
+            width: 85%;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-color);
             letter-spacing: 1px;
-            z-index: 10;
+            opacity: 0.9;
+            z-index: 5;
         }
 
         .time-text {
-            font-size: 20dvh; 
-            font-weight: 900; 
+            position: relative;
+            font-size: 19dvh; 
+            font-weight: 900;
             line-height: 1;
-            letter-spacing: -3px;
-            z-index: 1;
+            color: var(--text-color);
             font-variant-numeric: tabular-nums;
+            letter-spacing: -5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            transform: translateY(10%);
         }
 
-        #hint {
-            position: fixed;
-            bottom: 20px;
-            font-size: 12px;
-            opacity: 0.3;
-            color: white;
-            transition: opacity 0.5s;
+        .time-text::after {
+            content: "";
+            position: absolute;
+            left: 0; top: 48%;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 0, 0, 0.85);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+            z-index: 10;
         }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         @media (orientation: landscape) {
-            .container {
-                grid-template-rows: 1fr;
-                grid-template-columns: repeat(3, 1fr);
-                padding: 0 2vw;
-            }
-            .card {
-                width: 92%;
-                height: 85dvh;
-            }
-            .time-text {
-                font-size: 45dvh;
-            }
-            .info-text {
-                font-size: 4dvh;
-                top: 8%;
-            }
+            .main-container { flex-direction: row; padding: 20px 40px; gap: 15px; }
+            .time-box { height: 85dvh; flex: 1; }
+            .time-text { font-size: 42dvh; letter-spacing: -10px; }
         }
     </style>
 </head>
 <body onclick="handleInteraction()">
 
-    <div class="container">
-        <div class="card">
-            <div class="info-text" id="date-label">----.--.--</div>
-            <div class="time-text" id="hours">00</div>
-        </div>
-        <div class="card">
-            <div class="info-text" id="day-label">LOADING</div>
-            <div class="time-text" id="minutes">00</div>
-        </div>
-        <div class="card">
-            <div class="time-text" id="seconds">00</div>
+    <div class="stage">
+        <div class="meteor-disk" id="rotator"></div>
+        <div class="inner-mask"></div>
+
+        <div class="main-container">
+            <div class="time-box">
+                <div class="top-info">
+                    <span id="date-label">----.--.--</span>
+                    <span id="weather-label">氣溫 取得中</span>
+                </div>
+                <div id="hours" class="time-text">00</div>
+            </div>
+
+            <div class="time-box">
+                <div class="top-info">
+                    <span id="day-label">----</span>
+                    <span id="hum-label">濕度 取得中</span>
+                </div>
+                <div id="minutes" class="time-text">00</div>
+            </div>
+
+            <div class="time-box">
+                <div id="seconds" class="time-text">00</div>
+            </div>
         </div>
     </div>
 
-    <div id="hint">點擊螢幕：進入全螢幕並保持常亮</div>
-
     <script>
-        let wakeLock = null;
+        const rotator = document.getElementById('rotator');
 
         function updateClock() {
             const now = new Date();
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            document.getElementById('date-label').textContent = `${yyyy}.${mm}.${dd}`;
-
             const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            
+            document.getElementById('date-label').textContent = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
             document.getElementById('day-label').textContent = days[now.getDay()];
-
             document.getElementById('hours').textContent = String(now.getHours()).padStart(2, '0');
             document.getElementById('minutes').textContent = String(now.getMinutes()).padStart(2, '0');
             document.getElementById('seconds').textContent = String(now.getSeconds()).padStart(2, '0');
-
-            if (document.fullscreenElement) {
-                document.getElementById('hint').style.opacity = "0";
-            } else {
-                document.getElementById('hint').style.opacity = "0.3";
-            }
-        }
-
-        // 核心功能：請求螢幕常亮鎖定
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('螢幕常亮已啟動');
-                }
-            } catch (err) {
-                console.error(`無法啟動常亮: ${err.message}`);
-            }
-        }
-
-        function handleInteraction() {
-            // 1. 請求全螢幕
-            const docElm = document.documentElement;
-            if (!document.fullscreenElement) {
-                if (docElm.requestFullscreen) {
-                    docElm.requestFullscreen();
-                } else if (docElm.webkitRequestFullScreen) {
-                    docElm.webkitRequestFullScreen();
-                }
-            }
             
-            // 2. 啟動螢幕常亮
-            requestWakeLock();
+            const hue = (now.getSeconds() * 6 + now.getMilliseconds() / 166) % 360;
+            const color = `hsl(${hue}, 100%, 60%)`;
+            document.documentElement.style.setProperty('--beam-glow', color);
+            rotator.style.filter = `drop-shadow(0 0 20px ${color})`;
         }
 
-        // 當頁面從背景回到前景時，重新申請鎖定（部分手機會自動釋放）
-        document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                requestWakeLock();
-            }
-        });
+        async function fetchWeather(lat, lon) {
+            try {
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code`);
+                const data = await response.json();
+                
+                const temp = Math.round(data.current.temperature_2m);
+                const hum = data.current.relative_humidity_2m;
+                const code = data.current.weather_code;
 
-        setInterval(updateClock, 1000);
+                // 簡單的天氣代碼對照
+                let desc = "晴";
+                if (code > 0 && code <= 3) desc = "多雲";
+                if (code >= 45 && code <= 48) desc = "有霧";
+                if (code >= 51) desc = "有雨";
+
+                document.getElementById('weather-label').textContent = `${temp}°C ${desc}`;
+                document.getElementById('hum-label').textContent = `濕度 ${hum}%`;
+            } catch (e) {
+                console.error("Weather error", e);
+            }
+        }
+
+        function updateWeather() {
+            // 嘗試使用經緯度定位，更精準
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+                    () => {
+                        // 如果用戶拒絕定位，改用 IP 定位 (由 Open-Meteo 自動處理或預設台北)
+                        fetchWeather(25.03, 121.56); // 預設台北
+                    }
+                );
+            } else {
+                fetchWeather(25.03, 121.56);
+            }
+        }
+
+        async function handleInteraction() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').catch(() => {});
+            }
+        }
+
+        setInterval(updateClock, 50);
+        setInterval(updateWeather, 600000); // 10 分鐘更新一次
         updateClock();
+        updateWeather();
     </script>
 </body>
 </html>
